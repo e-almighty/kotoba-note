@@ -31,7 +31,7 @@ code{background:#edf2ff;color:#1d47b8;padding:1px 6px;border-radius:5px}
 <div class="card">
 <div class="actions"><button class="primary" id="copy">コードをコピー</button><button class="secondary" id="select">全部を選択</button><span id="status" aria-live="polite"></span></div>
 <textarea id="code" readonly spellcheck="false">読み込み中…</textarea>
-<p class="small">「コードをコピー」が効かないときは、「全部を選択」を押してから Ctrl+C でコピーしてください。</p>
+<p class="small">「コードをコピー」が効かないときは、「全部を選択」を押してから Ctrl+C（Mac は ⌘+C）でコピーしてください。</p>
 </div>
 
 <div class="card">
@@ -40,20 +40,20 @@ code{background:#edf2ff;color:#1d47b8;padding:1px 6px;border-radius:5px}
 <li><a href="https://script.google.com/" target="_blank" rel="noopener">https://script.google.com/</a> を、カレンダーを使っている Google アカウントで開く</li>
 <li>「新しいプロジェクト」→ 左上の名前を「ことばノート」にする</li>
 <li>最初から書いてある文字を全部消し、上の <b>「コードをコピー」</b> で写したコードを貼り付ける</li>
-<li>コードの中の <code>var PASSPHRASE = 'ここを自分の合言葉に変える';</code> の <code>ここを自分の合言葉に変える</code> を、自分だけの合言葉に変える（前後の <code>'</code> は残す。変えないと動きません）→ <b>Ctrl+S</b> で保存</li>
+<li>コードの中の <code>var PASSPHRASE = 'ここを自分の合言葉に変える';</code> の <code>ここを自分の合言葉に変える</code> を、自分だけの合言葉に変える（前後の <code>'</code> は残す。変えないと動きません）→ <b>保存</b>（Windows は <b>Ctrl+S</b>、Mac は <b>⌘+S</b>。上の<b>フロッピーの形のアイコン</b>でも保存できます）。左上の「変更が保存されていません」が消えたことを確認する</li>
 <li>右上「デプロイ」→「新しいデプロイ」→ 左上の歯車 →「ウェブアプリ」<br>説明：ことばノート／次のユーザーとして実行：<b>自分</b>／アクセスできるユーザー：<b>全員</b> →「デプロイ」</li>
 <li>「アクセスを承認」→ 自分のアカウント →「上級」→「ことばノート（安全ではないページ）に移動」→「続けてください」</li>
 <li>表示された <b>ウェブアプリの URL</b>（…/exec で終わる）をコピーしておく →「完了」</li>
 <li>上の関数選択（「doPost」と出ている所）で <b>getCalendar</b> を選び「▷ 実行」→ 権限を確認 → 同じく「上級」→ 移動 → <b>カレンダーの項目にチェック</b> → 続行。「実行完了」が出れば OK</li>
 <li>iPhone の<b>ホーム画面のことばノート</b>で 右上 ⓘ →「受付窓口の URL」に 7 の URL、「合言葉」に 4 の言葉を入れ、「接続を確認」→「つながりました」</li>
 </ol>
-<p class="note"><b>URL と合言葉は自分だけのもの</b>です。人に見せると、その人の予定があなたのカレンダーに入ってしまいます。</p>
+<p class="note" style="margin-bottom:10px"><b>「エラーが発生しました。ダイアログを閉じてもう一度お試しください」と出たとき</b><br>① 左上に「変更が保存されていません」が出ていないか確認し、保存してからデプロイし直す。<br>② それでも出るときは、ブラウザで Google アカウントに複数ログインしていることが原因のことがあります。<b>シークレットウィンドウ（Safari はプライベートウインドウ）</b>で script.google.com を開き、使うアカウント1つだけでログインしてやり直してください。</p><p class="note"><b>URL と合言葉は自分だけのもの</b>です。人に見せると、その人の予定があなたのカレンダーに入ってしまいます。</p>
 </div>
 </main>
 <script>
 const ta=document.getElementById('code'),st=document.getElementById('status');
 fetch('google-apps-script.txt',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{ta.value=t}).catch(()=>{ta.value='コードを読み込めませんでした。ページを開き直してください。'});
-document.getElementById('select').onclick=()=>{ta.focus();ta.select();st.textContent='選択しました。Ctrl+C でコピーできます'};
+document.getElementById('select').onclick=()=>{ta.focus();ta.select();st.textContent='選択しました。Ctrl+C（Mac は ⌘+C）でコピーできます'};
 document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value);st.textContent='コピーしました'}catch{ta.focus();ta.select();try{document.execCommand('copy');st.textContent='コピーしました'}catch{st.textContent='選択しました。Ctrl+C でコピーしてください'}}};
 </script>
 </body></html>
