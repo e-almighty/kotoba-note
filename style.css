@@ -19,3 +19,7 @@
 .inline-link{display:inline;padding:0;font-size:inherit;text-decoration:underline}
 
 .where-box{margin:12px 0 4px;line-height:1.9}.where-box .primary{margin-top:6px}
+
+/* 完了リストの削除 */
+#toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:14px}.toast-undo{color:#9fc0ff;font-weight:700;font-size:14px;white-space:nowrap;padding:4px 0}.day-actions{display:flex;align-items:center;gap:12px}.day-actions .text-btn{font-size:12px;padding:6px 0}.done-row .row-actions{flex-direction:row;gap:6px}
+.day-actions{flex-shrink:0;white-space:nowrap}
