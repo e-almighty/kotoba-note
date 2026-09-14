@@ -15,3 +15,5 @@
 /* 2026-09-14 Google */
 #detail-body code{font-size:12px;background:#f1f4fa;padding:2px 6px;border-radius:5px;overflow-wrap:anywhere}
 @media(max-width:700px){.mobile-nav button{font-size:9px;letter-spacing:-.02em}}
+
+.inline-link{display:inline;padding:0;font-size:inherit;text-decoration:underline}
