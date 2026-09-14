@@ -1,0 +1,101 @@
+/**
+ * ことばノート → Google カレンダー 受付窓口（Google Apps Script）
+ *
+ * 置き方（1回だけ、5分）
+ *   1. https://script.google.com/ を開く（カレンダーを使っている Google アカウントで）
+ *   2. 「新しいプロジェクト」→ 左上の名前を「ことばノート」に変更
+ *   3. 開いている Code.gs の中身を全部消し、このファイルの内容を貼り付けて保存（Ctrl+S）
+ *   4. 下の PASSPHRASE の 'ここを自分の合言葉に変える' を、自分だけの合言葉に変える（変えないと動きません）
+ *   5. 右上「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」
+ *        説明：ことばノート / 次のユーザーとして実行：自分 / アクセスできるユーザー：全員
+ *      →「デプロイ」→「アクセスを承認」→ 自分のアカウントを選ぶ
+ *      →「このアプリは Google で確認されていません」と出たら「詳細」→「ことばノート（安全ではないページ）に移動」→「許可」
+ *   6. 表示された「ウェブアプリの URL」（https://script.google.com/macros/s/…/exec）をコピー
+ *   7. ことばノートの ⓘ 設定「Google 受付窓口の URL」に貼り、「合言葉」に 4 で決めた言葉を入れる →「接続を確認」
+ *
+ * 2026-09-14 追記（版2）：登録した予定に「30分前」と「10分前」の通知を自動で付けます（REMINDER_MINUTES）。この版に更新するには、貼り直して
+ *   「デプロイ」→「デプロイを管理」→ 鉛筆 → バージョン「新バージョン」→「デプロイ」。URL は変わりません。
+ *
+ * 直したいとき：コードを変えたら「デプロイ」→「デプロイを管理」→ 鉛筆 → バージョン「新バージョン」→「デプロイ」。URL は変わりません。
+ * 止めたいとき：「デプロイを管理」→ アーカイブ。
+ */
+
+var PLACEHOLDER = 'ここを自分の合言葉に変える';
+var PASSPHRASE = 'ここを自分の合言葉に変える';   // ← 必ず自分だけの合言葉に変える（アプリの「合言葉」欄と同じにする）
+var CALENDAR_ID = 'primary';          // 登録先。別のカレンダーにしたいときは、そのカレンダーの ID（設定 → カレンダーの統合 → カレンダー ID）
+var TZ = 'Asia/Tokyo';
+var REMINDER_MINUTES = [30, 10];   // 予定の何分前に iPhone へ通知するか（複数可）。アプリ側で「1時間前に通知」と言えば [60, 10] のように置き換わる。[] にすると付けない
+
+function doPost(e) {
+  var out;
+  try {
+    var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (!PASSPHRASE || PASSPHRASE === PLACEHOLDER) throw new Error('Apps Script の PASSPHRASE を自分の合言葉に変えてください');
+    if (body.passphrase !== PASSPHRASE) throw new Error('合言葉が違います');
+    if (body.action === 'ping') {
+      out = { ok: true, calendar: getCalendar().getName(), version: 2 };
+    } else if (body.action === 'create' || body.action === 'update') {
+      out = upsertEvent(body);
+    } else {
+      throw new Error('action が不明です');
+    }
+  } catch (err) {
+    out = { ok: false, error: String(err && err.message || err) };
+  }
+  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return ContentService.createTextOutput('ことばノート受付窓口は動いています。登録はアプリから行います。').setMimeType(ContentService.MimeType.TEXT);
+}
+
+function getCalendar() {
+  var cal = CALENDAR_ID === 'primary' ? CalendarApp.getDefaultCalendar() : CalendarApp.getCalendarById(CALENDAR_ID);
+  if (!cal) throw new Error('カレンダーが見つかりません: ' + CALENDAR_ID);
+  return cal;
+}
+
+function upsertEvent(body) {
+  if (!body.title || !body.date || !body.time || !body.endTime) throw new Error('title / date / time / endTime が必要です');
+  var start = parseLocal(body.date, body.time);
+  var end = parseLocal(body.date, body.endTime);
+  if (!(end > start)) throw new Error('終了時刻は開始より後にしてください');
+  var cal = getCalendar();
+  var desc = (body.description || '') + (body.description ? '\n' : '') + '（ことばノートから登録）';
+  var ev = null;
+  if (body.googleEventId) { try { ev = cal.getEventById(body.googleEventId); } catch (ignore) {} }
+  if (ev) {
+    ev.setTitle(body.title); ev.setTime(start, end); ev.setDescription(desc);
+  } else {
+    ev = cal.createEvent(body.title, start, end, { description: desc });
+  }
+  // 通知（リマインダー）。アプリから reminder（分）が来ればそれ、無ければ REMINDER_MINUTES
+  var list = REMINDER_MINUTES.slice();
+  if (typeof body.reminder === 'number' && body.reminder >= 0) list = body.reminder === 0 ? [] : [Math.min(body.reminder, 40320), 10];
+  var seen = {};
+  try {
+    ev.removeAllReminders();
+    for (var i = 0; i < list.length; i++) { var m = Number(list[i]); if (m > 0 && !seen[m]) { seen[m] = true; ev.addPopupReminder(m); } }
+  } catch (ignore) {}
+  var reminders = Object.keys(seen).map(Number).sort(function (a, b) { return b - a; });
+  return { ok: true, id: ev.getId(), link: eventLink(ev), start: Utilities.formatDate(start, TZ, 'yyyy-MM-dd HH:mm'), reminders: reminders };
+}
+
+function parseLocal(date, hm) {
+  // date: 'YYYY-MM-DD', hm: 'HH:MM' を日本時間として解釈
+  var p = date.split('-').map(Number), t = hm.split(':').map(Number);
+  var iso = Utilities.formatString('%04d-%02d-%02dT%02d:%02d:00+09:00', p[0], p[1], p[2], t[0], t[1]);
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) throw new Error('日時の形式が違います: ' + date + ' ' + hm);
+  return d;
+}
+
+function eventLink(ev) {
+  // カレンダーの予定を開くリンク（eid = base64(eventId + ' ' + calendarEmail)）
+  try {
+    var id = ev.getId().replace(/@google\.com$/, '');
+    var email = Session.getEffectiveUser().getEmail();
+    var eid = Utilities.base64Encode(id + ' ' + email).replace(/=+$/, '');
+    return 'https://calendar.google.com/calendar/event?eid=' + eid;
+  } catch (e) { return ''; }
+}
