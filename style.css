@@ -17,3 +17,5 @@
 @media(max-width:700px){.mobile-nav button{font-size:9px;letter-spacing:-.02em}}
 
 .inline-link{display:inline;padding:0;font-size:inherit;text-decoration:underline}
+
+.where-box{margin:12px 0 4px;line-height:1.9}.where-box .primary{margin-top:6px}
