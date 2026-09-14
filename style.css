@@ -23,3 +23,5 @@
 /* 完了リストの削除 */
 #toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:14px}.toast-undo{color:#9fc0ff;font-weight:700;font-size:14px;white-space:nowrap;padding:4px 0}.day-actions{display:flex;align-items:center;gap:12px}.day-actions .text-btn{font-size:12px;padding:6px 0}.done-row .row-actions{flex-direction:row;gap:6px}
 .day-actions{flex-shrink:0;white-space:nowrap}
+
+.voice-pill{font-size:11px;padding:2px 7px;border-radius:5px;margin-left:6px;font-weight:600}
